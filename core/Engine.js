@@ -2,6 +2,10 @@ import { Camera } from "./Camera.js";
 import { Renderer } from "./Renderer.js";
 import { Input } from "./Input.js";
 import { World } from "./World.js";
+import { ToolManager } from "../tools/ToolManager.js";
+import { SelectTool } from "../tools/SelectTool.js";
+import { PlantTool } from "../tools/PlantTool.js";
+import { EraserTool } from "../tools/EraserTool.js";
 
 
 export class Engine {
@@ -34,7 +38,8 @@ export class Engine {
         this.input =
             new Input(
                 canvas,
-                this.camera
+                this.camera,
+                null
             );
 
 
@@ -60,6 +65,62 @@ export class Engine {
             () => this.resize()
         );
 
+        this.tools =
+            new ToolManager(this);
+
+
+
+        this.tools.register(
+            "select",
+            new SelectTool(this)
+        );
+
+
+
+        this.tools.register(
+            "tree",
+            new PlantTool(this, "tree")
+        );
+
+
+
+        this.tools.register(
+            "flower",
+            new PlantTool(this, "flower")
+        );
+
+
+
+        this.tools.register(
+            "rock",
+            new PlantTool(this, "rock")
+        );
+
+
+
+        this.tools.register(
+            "sand",
+            new PlantTool(this, "sand")
+        );
+
+
+
+        this.tools.register(
+            "eraser",
+            new EraserTool(this)
+        );
+
+
+
+        this.tools.activate(
+            "select"
+        );
+
+
+
+        this.input.setToolManager(
+            this.tools
+        );
 
     }
 

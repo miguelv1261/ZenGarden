@@ -61,7 +61,7 @@ class GardenOfSilence {
 
 
         this.engine.start();
-
+        this.bindTools();
 
 
         console.log(
