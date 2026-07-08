@@ -501,6 +501,73 @@ export class Input {
         }
 
 
+
+        // -------------------------------------------------
+        // No interceptar teclas mientras se escribe en un
+        // campo del Inspector u otro formulario
+        // -------------------------------------------------
+
+        const tag =
+            event.target &&
+            event.target.tagName;
+
+
+        const isFormField =
+            tag === "INPUT" ||
+            tag === "TEXTAREA" ||
+            tag === "SELECT";
+
+
+        if(isFormField)
+            return;
+
+
+
+        const engine =
+            this.toolManager &&
+            this.toolManager.engine;
+
+
+        if(!engine)
+            return;
+
+
+
+        if(
+
+            event.code === "Delete" ||
+            event.code === "Backspace"
+
+        ){
+
+
+            event.preventDefault();
+
+
+            engine.deleteSelected();
+
+
+        }
+
+
+
+        if(
+
+            (event.ctrlKey || event.metaKey) &&
+            event.code === "KeyD"
+
+        ){
+
+
+            event.preventDefault();
+
+
+            engine.duplicateSelected();
+
+
+        }
+
+
     }
 
 

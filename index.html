@@ -27,10 +27,11 @@
 
             <div class="menu">
 
-                <button>Nuevo</button>
-                <button>Abrir</button>
-                <button>Guardar</button>
-                <button>Exportar</button>
+                <button id="btnNew">Nuevo</button>
+                <button id="btnOpen">Abrir</button>
+                <button id="btnSave">Guardar</button>
+                <button id="btnExport">Exportar</button>
+                <button id="btnSound" title="Sonido ambiental">🔇</button>
 
             </div>
 
@@ -57,6 +58,40 @@
         <main>
 
             <canvas id="gameCanvas"></canvas>
+
+            <aside id="inspector" class="hidden">
+
+                <h3 id="inspectorTitle">Objeto</h3>
+
+                <label>
+                    Rotación
+                    <input type="range" id="inspRotation" min="0" max="360" step="1">
+                </label>
+
+                <label>
+                    Escala
+                    <input type="range" id="inspScale" min="0.3" max="2.5" step="0.05">
+                </label>
+
+                <label>
+                    Opacidad
+                    <input type="range" id="inspOpacity" min="0.2" max="1" step="0.05">
+                </label>
+
+                <label id="inspColorRow">
+                    Color
+                    <input type="color" id="inspColor">
+                </label>
+
+                <div class="inspectorActions">
+
+                    <button id="inspDuplicate" title="Duplicar (Ctrl+D)">⧉ Duplicar</button>
+
+                    <button id="inspDelete" title="Eliminar (Supr)">🗑 Eliminar</button>
+
+                </div>
+
+            </aside>
 
         </main>
 

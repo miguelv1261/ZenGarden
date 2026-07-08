@@ -7,6 +7,7 @@ import { SelectTool } from "../tools/SelectTool.js";
 import { PlantTool } from "../tools/PlantTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
 import { RakeTool } from "../tools/RakeTool.js";
+import { ObjectFactory } from "../factory/ObjectFactory.js";
 
 
 export class Engine {
@@ -216,6 +217,80 @@ export class Engine {
 
     }
 
+
+
+
+
+    //==========================================================================
+    // ELIMINAR OBJETO SELECCIONADO
+    //==========================================================================
+
+    deleteSelected() {
+
+
+        const object =
+            this.world.getSelected();
+
+
+        if (!object)
+            return;
+
+
+        this.world.remove(object);
+
+
+    }
+
+
+
+
+    //==========================================================================
+    // DUPLICAR OBJETO SELECCIONADO
+    //==========================================================================
+
+    duplicateSelected() {
+
+
+        const object =
+            this.world.getSelected();
+
+
+        if (!object)
+            return;
+
+
+        const data =
+            object.serialize();
+
+
+        delete data.id;
+
+
+        data.x += 24;
+
+        data.y += 24;
+
+
+        const clone =
+            ObjectFactory.create(
+                object.type,
+                data
+            );
+
+
+        if (clone) {
+
+
+            this.world.add(clone);
+
+
+            this.world.selectObject(clone);
+
+
+        }
+
+
+    }
 
 
 
