@@ -8,6 +8,93 @@
 export class Renderer {
 
 
+    //==========================================================================
+    // TEXTURA DE PAPEL (generada una sola vez, reutilizada como patrón)
+    //==========================================================================
+
+    createPaperPattern() {
+
+
+        const size = 220;
+
+
+        const tile =
+            document.createElement("canvas");
+
+
+        tile.width = size;
+
+        tile.height = size;
+
+
+        const tctx =
+            tile.getContext("2d");
+
+
+        tctx.fillStyle = "#efe8da";
+
+        tctx.fillRect(0, 0, size, size);
+
+
+        for (let i = 0; i < 900; i++) {
+
+
+            const x = Math.random() * size;
+
+            const y = Math.random() * size;
+
+            const light = Math.random() > 0.5;
+
+
+            tctx.fillStyle =
+                light
+                    ? "rgba(255,252,240,0.5)"
+                    : "rgba(120,105,80,0.05)";
+
+
+            tctx.fillRect(x, y, 1, 1);
+
+
+        }
+
+
+        tctx.strokeStyle = "rgba(120,105,80,0.05)";
+
+        tctx.lineWidth = 1;
+
+
+        for (let i = 0; i < 12; i++) {
+
+
+            const y = Math.random() * size;
+
+
+            tctx.beginPath();
+
+            tctx.moveTo(0, y);
+
+            tctx.bezierCurveTo(
+
+                size * 0.3, y + (Math.random() - 0.5) * 20,
+
+                size * 0.7, y + (Math.random() - 0.5) * 20,
+
+                size, y
+
+            );
+
+            tctx.stroke();
+
+
+        }
+
+
+        return this.ctx.createPattern(tile, "repeat");
+
+
+    }
+
+
     constructor(canvas, camera) {
 
 
@@ -36,10 +123,14 @@ export class Renderer {
         this.gridSize = 100;
 
 
-        this.showGrid = true;
+        this.showGrid = false;
 
 
-        this.showOrigin = true;
+        this.showOrigin = false;
+
+
+        this.paperPattern =
+            this.createPaperPattern();
 
 
 
@@ -163,9 +254,19 @@ export class Renderer {
         );
 
 
+        if (world.particles) {
+
+            world.particles.draw(ctx);
+
+        }
+
+
 
         ctx.restore();
 
+
+
+        this.drawLightOverlay(world);
 
 
         this.drawInterface();
@@ -199,7 +300,7 @@ export class Renderer {
 
 
         this.ctx.fillStyle =
-            "#efe8da";
+            this.paperPattern ?? "#efe8da";
 
 
 
@@ -453,6 +554,83 @@ export class Renderer {
 
     }
 
+
+
+
+
+    //==========================================================================
+    // LUZ AMBIENTAL (varía lentamente con el tiempo del mundo)
+    //==========================================================================
+
+    drawLightOverlay(world) {
+
+
+        const ctx = this.ctx;
+
+
+        const w = this.canvas.clientWidth;
+
+        const h = this.canvas.clientHeight;
+
+
+        const t = world.time * 0.05;
+
+
+        const cx = w * (0.5 + Math.sin(t) * 0.15);
+
+        const cy = h * (0.35 + Math.cos(t * 0.7) * 0.08);
+
+
+        const glow =
+            ctx.createRadialGradient(
+
+                cx, cy, 0,
+
+                cx, cy, Math.max(w, h) * 0.8
+
+            );
+
+
+        glow.addColorStop(0, "rgba(255,248,220,0.10)");
+
+        glow.addColorStop(1, "rgba(255,248,220,0)");
+
+
+        ctx.save();
+
+        ctx.fillStyle = glow;
+
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.restore();
+
+
+
+        const vignette =
+            ctx.createRadialGradient(
+
+                w / 2, h / 2, Math.min(w, h) * 0.4,
+
+                w / 2, h / 2, Math.max(w, h) * 0.75
+
+            );
+
+
+        vignette.addColorStop(0, "rgba(0,0,0,0)");
+
+        vignette.addColorStop(1, "rgba(40,30,20,0.10)");
+
+
+        ctx.save();
+
+        ctx.fillStyle = vignette;
+
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.restore();
+
+
+    }
 
 
 

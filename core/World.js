@@ -5,6 +5,10 @@
 // Version 0.2 Alpha
 // ============================================================================
 
+import { ObjectFactory } from "../factory/ObjectFactory.js";
+import { ParticleSystem } from "../effects/Particles.js";
+
+
 export class World {
 
 
@@ -43,6 +47,23 @@ export class World {
 
 
 
+        // ---------------------------------------------------------------------
+        // Notificación de selección (usada por el Inspector)
+        // ---------------------------------------------------------------------
+
+        this.onSelectionChange = null;
+
+
+
+        // ---------------------------------------------------------------------
+        // Partículas ambientales (hojas / pétalos)
+        // ---------------------------------------------------------------------
+
+        this.particles =
+            new ParticleSystem();
+
+
+
     }
 
 
@@ -78,6 +99,10 @@ export class World {
 
 
         }
+
+
+
+        this.particles.update(delta, this.objects);
 
 
     }
@@ -144,6 +169,14 @@ export class World {
                 1
 
             );
+
+
+
+            if(object.selected && this.onSelectionChange){
+
+                this.onSelectionChange(null);
+
+            }
 
 
         }
@@ -344,6 +377,33 @@ export class World {
         }
 
 
+
+        if(this.onSelectionChange){
+
+            this.onSelectionChange(object || null);
+
+        }
+
+
+    }
+
+
+
+
+    //==========================================================================
+    // OBJETO SELECCIONADO ACTUAL
+    //==========================================================================
+
+    getSelected(){
+
+
+        return this.objects.find(
+
+            object => object.selected
+
+        ) ?? null;
+
+
     }
 
 
@@ -417,17 +477,32 @@ export class World {
 
 
 
-        // Los objetos reales serán creados
-        // por ObjectFactory en futuras versiones
+        for(const objectData of data.objects){
 
 
-        console.log(
+            const object =
+                ObjectFactory.create(
 
-            "Garden loaded",
+                    objectData.type,
 
-            data
+                    objectData
 
-        );
+                );
+
+
+            if(object){
+
+                this.add(object);
+
+            }
+
+
+        }
+
+
+
+        this.time =
+            data.time ?? 0;
 
 
     }

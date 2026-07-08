@@ -6,6 +6,11 @@
 // ============================================================================
 
 import { GameObject } from "../core/GameObject.js";
+import {
+    createRng,
+    blobPoints,
+    sketchStroke
+} from "../render/SketchStyle.js";
 
 
 export class SandPatch extends GameObject {
@@ -53,7 +58,31 @@ export class SandPatch extends GameObject {
             this.texture.getContext("2d");
 
 
+        // ---------------------------------------------------------------------
+        // Historial acotado de trazos rastrillados (para poder reproducirlo
+        // al cargar un jardín guardado)
+        // ---------------------------------------------------------------------
+
+        this.strokes =
+            options.strokes ?? [];
+
+
         this.generateBase();
+
+
+        for (const stroke of this.strokes) {
+
+            this.drawGrooveSegment(
+
+                stroke.x1,
+                stroke.y1,
+
+                stroke.x2,
+                stroke.y2
+
+            );
+
+        }
 
 
     }
@@ -82,6 +111,65 @@ export class SandPatch extends GameObject {
         ctx.fillStyle = "#dcc493";
 
         ctx.fillRect(0, 0, w, h);
+
+
+        // Veteado sutil estilo acuarela: manchas grandes y suaves de tono
+        // ligeramente distinto antes del grano, para que no sea un color plano
+
+        const mottleRng =
+            createRng(this.id + "-mottle");
+
+
+        const tones = [
+
+            "rgba(196,168,116,0.16)",
+
+            "rgba(230,206,160,0.18)",
+
+            "rgba(178,150,100,0.14)"
+
+        ];
+
+
+        for (let i = 0; i < 5; i++) {
+
+
+            const bx = mottleRng() * w;
+            const by = mottleRng() * h;
+
+            const br = 40 + mottleRng() * 70;
+
+
+            const points =
+                blobPoints(mottleRng, br, { segments: 10, irregularity: 0.35 });
+
+
+            ctx.save();
+
+            ctx.translate(bx, by);
+
+            ctx.beginPath();
+
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let j = 1; j < points.length; j++) {
+
+                ctx.lineTo(points[j].x, points[j].y);
+
+            }
+
+            ctx.closePath();
+
+
+            ctx.fillStyle = tones[i % tones.length];
+
+            ctx.fill();
+
+
+            ctx.restore();
+
+
+        }
 
 
         // Grano: cientos de puntitos claros/oscuros al azar
@@ -256,15 +344,26 @@ export class SandPatch extends GameObject {
         const h = this.height;
 
 
-        this.drawGrooveSegment(
+        const x1 = p1.x + w / 2;
+        const y1 = p1.y + h / 2;
 
-            p1.x + w / 2,
-            p1.y + h / 2,
+        const x2 = p2.x + w / 2;
+        const y2 = p2.y + h / 2;
 
-            p2.x + w / 2,
-            p2.y + h / 2
 
-        );
+        this.drawGrooveSegment(x1, y1, x2, y2);
+
+
+        this.strokes.push({ x1, y1, x2, y2 });
+
+
+        // acotar el historial para que el guardado no crezca sin límite
+
+        if (this.strokes.length > 600) {
+
+            this.strokes.shift();
+
+        }
 
 
     }
@@ -280,6 +379,9 @@ export class SandPatch extends GameObject {
 
 
         this.generateBase();
+
+
+        this.strokes = [];
 
 
     }
@@ -338,6 +440,27 @@ export class SandPatch extends GameObject {
 
 
     //==========================================================================
+    // SERIALIZACIÓN (incluye el historial de rastrillado)
+    //==========================================================================
+
+    serialize() {
+
+
+        return {
+
+            ...super.serialize(),
+
+            strokes: this.strokes
+
+        };
+
+
+    }
+
+
+
+
+    //==========================================================================
     // DIBUJO
     //==========================================================================
 
@@ -369,21 +492,37 @@ export class SandPatch extends GameObject {
         ctx.restore();
 
 
-        // borde del estanque, como un cajón de madera hundido
+        // borde del estanque, boceteado a mano en vez de una elipse perfecta
 
-        ctx.save();
+        const rng =
+            createRng(this.id);
 
-        ctx.beginPath();
 
-        ctx.ellipse(0, 0, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
+        const unit =
+            blobPoints(rng, 1, { segments: 36, irregularity: 0.035 });
 
-        ctx.lineWidth = 6;
 
-        ctx.strokeStyle = "rgba(110,85,55,0.28)";
+        const border =
+            unit.map(p => ({
 
-        ctx.stroke();
+                x: p.x * this.radiusX,
 
-        ctx.restore();
+                y: p.y * this.radiusY
+
+            }));
+
+
+        sketchStroke(ctx, border, rng, {
+
+            closed: true,
+
+            color: "rgba(110,85,55,0.35)",
+
+            width: 5,
+
+            passes: 2
+
+        });
 
 
     }

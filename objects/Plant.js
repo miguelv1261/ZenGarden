@@ -1,4 +1,11 @@
 import { GameObject } from "../core/GameObject.js";
+import {
+    createRng,
+    blobPoints,
+    wobbleLinePoints,
+    watercolorFill,
+    sketchStroke
+} from "../render/SketchStyle.js";
 
 
 export class Plant extends GameObject {
@@ -9,15 +16,15 @@ export class Plant extends GameObject {
 
         super({
 
-            ...options,
-
             name: "Plant",
 
             type: "plant",
 
             width: 40,
 
-            height: 40
+            height: 40,
+
+            ...options
 
         });
 
@@ -76,6 +83,9 @@ export class Plant extends GameObject {
     drawObject(ctx) {
 
 
+        const rng =
+            createRng(this.id);
+
 
         const size =
             10 +
@@ -85,80 +95,58 @@ export class Plant extends GameObject {
 
         // tallo
 
-        ctx.strokeStyle =
-            "#557a45";
+        const stem =
+            wobbleLinePoints(rng, 0, 20, 0, -size, { segments: 4, amount: 1.6 });
 
 
-        ctx.lineWidth =
-            4;
+        sketchStroke(ctx, stem, rng, {
 
+            color: "#4a6b3c",
 
+            width: 2,
 
-        ctx.beginPath();
+            passes: 2
 
-
-        ctx.moveTo(0, 20);
-
-
-        ctx.lineTo(0, -size);
-
-
-        ctx.stroke();
-
-
+        });
 
 
 
         // hojas
 
-        ctx.fillStyle =
-            "#78a85c";
+        const leaves = [
+
+            [-8, -size / 2],
+
+            [8, -size / 1.5]
+
+        ];
 
 
-
-        ctx.beginPath();
-
-
-        ctx.arc(
-
-            -8,
-
-            -size / 2,
-
-            8,
-
-            0,
-
-            Math.PI * 2
-
-        );
+        leaves.forEach(([lx, ly]) => {
 
 
-        ctx.fill();
+            ctx.save();
+
+            ctx.translate(lx, ly);
 
 
+            const points =
+                blobPoints(rng, 7, { segments: 8, irregularity: 0.3 });
 
 
-        ctx.beginPath();
+            watercolorFill(ctx, points, "#78a85c", rng, {
+
+                layers: 2,
+
+                alpha: 0.45
+
+            });
 
 
-        ctx.arc(
-
-            8,
-
-            -size / 1.5,
-
-            8,
-
-            0,
-
-            Math.PI * 2
-
-        );
+            ctx.restore();
 
 
-        ctx.fill();
-
+        });
 
 
     }
