@@ -6,6 +6,7 @@ import { ToolManager } from "../tools/ToolManager.js";
 import { SelectTool } from "../tools/SelectTool.js";
 import { PlantTool } from "../tools/PlantTool.js";
 import { EraserTool } from "../tools/EraserTool.js";
+import { RakeTool } from "../tools/RakeTool.js";
 
 
 export class Engine {
@@ -108,6 +109,13 @@ export class Engine {
         this.tools.register(
             "eraser",
             new EraserTool(this)
+        );
+
+
+
+        this.tools.register(
+            "rake",
+            new RakeTool(this)
         );
 
 

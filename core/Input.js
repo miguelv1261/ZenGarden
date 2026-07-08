@@ -198,6 +198,15 @@ export class Input {
         );
 
 
+        this.canvas.addEventListener(
+
+            "dblclick",
+
+            e => this.doubleClick(e)
+
+        );
+
+
     }
 
 
@@ -441,6 +450,25 @@ export class Input {
             event.deltaY
 
         );
+
+
+    }
+
+
+
+
+    //==========================================================================
+    // DOBLE CLIC
+    //==========================================================================
+
+    doubleClick(event){
+
+
+        if(this.toolManager){
+
+            this.toolManager.doubleClick(event);
+
+        }
 
 
     }

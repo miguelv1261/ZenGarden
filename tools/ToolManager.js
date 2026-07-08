@@ -159,5 +159,22 @@ export class ToolManager {
 
 
 
+    doubleClick(event) {
+
+
+        if (this.currentTool && this.currentTool.doubleClick) {
+
+
+            this.currentTool.doubleClick(event);
+
+
+        }
+
+
+    }
+
+
+
+
 
 }

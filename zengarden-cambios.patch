@@ -1,0 +1,761 @@
+diff --git a/core/Engine.js b/core/Engine.js
+index 0ee037a..7ad6cbd 100644
+--- a/core/Engine.js
++++ b/core/Engine.js
+@@ -6,6 +6,7 @@ import { ToolManager } from "../tools/ToolManager.js";
+ import { SelectTool } from "../tools/SelectTool.js";
+ import { PlantTool } from "../tools/PlantTool.js";
+ import { EraserTool } from "../tools/EraserTool.js";
++import { RakeTool } from "../tools/RakeTool.js";
+ 
+ 
+ export class Engine {
+@@ -112,6 +113,13 @@ export class Engine {
+ 
+ 
+ 
++        this.tools.register(
++            "rake",
++            new RakeTool(this)
++        );
++
++
++
+         this.tools.activate(
+             "select"
+         );
+diff --git a/core/Input.js b/core/Input.js
+index 38821ca..9beca39 100644
+--- a/core/Input.js
++++ b/core/Input.js
+@@ -198,6 +198,15 @@ export class Input {
+         );
+ 
+ 
++        this.canvas.addEventListener(
++
++            "dblclick",
++
++            e => this.doubleClick(e)
++
++        );
++
++
+     }
+ 
+ 
+@@ -448,6 +457,25 @@ export class Input {
+ 
+ 
+ 
++    //==========================================================================
++    // DOBLE CLIC
++    //==========================================================================
++
++    doubleClick(event){
++
++
++        if(this.toolManager){
++
++            this.toolManager.doubleClick(event);
++
++        }
++
++
++    }
++
++
++
++
+ 
+     //==========================================================================
+     // KEYBOARD
+diff --git a/index.html b/index.html
+index 5baee60..2a67949 100644
+--- a/index.html
++++ b/index.html
+@@ -48,6 +48,8 @@
+ 
+             <button title="Arena" data-tool="sand">🌾</button>
+ 
++            <button title="Rastrillar (arrastra sobre la arena, doble clic para alisar)" data-tool="rake">🪮</button>
++
+             <button title="Borrar" data-tool="eraser">🗑</button>
+ 
+         </aside>
+diff --git a/js/main.js b/js/main.js
+index 5ed89d0..2c782ab 100644
+--- a/js/main.js
++++ b/js/main.js
+@@ -5,7 +5,7 @@
+ // Version 0.2 Alpha
+ // ============================================================================
+ 
+-import { Engine } from "./core/Engine.js";
++import { Engine } from "../core/Engine.js";
+ 
+ 
+ 
+diff --git a/objects/SandPatch.js b/objects/SandPatch.js
+index d7096e2..43a5d16 100644
+--- a/objects/SandPatch.js
++++ b/objects/SandPatch.js
+@@ -1,3 +1,10 @@
++// ============================================================================
++// Silence Engine
++// SandPatch.js
++// Garden of Silence
++// Arena rastrillable con textura propia (canvas offscreen)
++// ============================================================================
++
+ import { GameObject } from "../core/GameObject.js";
+ 
+ 
+@@ -22,82 +29,206 @@ export class SandPatch extends GameObject {
+         });
+ 
+ 
++        // ---------------------------------------------------------------------
++        // Forma del estanque de arena (elipse dentro del bounding box)
++        // ---------------------------------------------------------------------
++
++        this.radiusX = this.width / 2;
++
++        this.radiusY = this.height / 2;
++
++
++        // ---------------------------------------------------------------------
++        // Textura offscreen: aquí vive el grano y los surcos rastrillados.
++        // Se dibuja UNA vez y se va modificando, en vez de recalcular cada frame.
++        // ---------------------------------------------------------------------
++
++        this.texture =
++            document.createElement("canvas");
++
++        this.texture.width = this.width;
++        this.texture.height = this.height;
++
++        this.tctx =
++            this.texture.getContext("2d");
++
++
++        this.generateBase();
++
++
+     }
+ 
+ 
+ 
+ 
++    //==========================================================================
++    // GENERAR TEXTURA BASE (grano + patrón de calma inicial)
++    //==========================================================================
+ 
+-    drawObject(ctx) {
++    generateBase() {
+ 
+ 
+-        ctx.fillStyle =
+-            "#d8c28f";
++        const ctx = this.tctx;
+ 
++        const w = this.width;
++        const h = this.height;
+ 
+-        ctx.beginPath();
+ 
++        ctx.clearRect(0, 0, w, h);
+ 
+-        ctx.ellipse(
+ 
+-            0,
++        // Color base de la arena
+ 
+-            0,
++        ctx.fillStyle = "#dcc493";
+ 
+-            150,
++        ctx.fillRect(0, 0, w, h);
+ 
+-            100,
+ 
+-            0,
++        // Grano: cientos de puntitos claros/oscuros al azar
+ 
+-            0,
++        for (let i = 0; i < 1400; i++) {
+ 
+-            Math.PI * 2
+ 
+-        );
++            const gx = Math.random() * w;
++            const gy = Math.random() * h;
+ 
++            const light = Math.random() > 0.5;
+ 
+-        ctx.fill();
++            ctx.fillStyle =
++                light
++                    ? "rgba(255,248,225,0.18)"
++                    : "rgba(110,90,60,0.14)";
+ 
++            ctx.fillRect(gx, gy, 1.4, 1.4);
+ 
+ 
++        }
+ 
+-        // líneas de arena
+ 
+-        ctx.strokeStyle =
+-            "#bfa875";
++        // Patrón inicial de surcos concéntricos (jardín recién rastrillado)
+ 
++        const cx = w / 2;
++        const cy = h / 2;
+ 
+-        ctx.lineWidth =
+-            2;
++        for (let r = 18; r < Math.min(w, h) / 2 - 10; r += 14) {
+ 
+ 
++            this.drawGrooveArc(cx, cy, r);
+ 
+-        for (let y = -60; y <= 60; y += 20) {
+ 
++        }
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // DIBUJAR UN ARCO DE SURCOS (para el patrón inicial concéntrico)
++    //==========================================================================
++
++    drawGrooveArc(cx, cy, r) {
++
++
++        const steps = 40;
++
++        let prev = null;
++
++
++        for (let i = 0; i <= steps; i++) {
++
++
++            const angle = (i / steps) * Math.PI * 2;
++
++            const x = cx + Math.cos(angle) * r;
++            const y = cy + Math.sin(angle) * (r * (this.height / this.width));
++
++
++            if (prev) {
++
++                this.drawGrooveSegment(prev.x, prev.y, x, y, 1);
++
++            }
++
++
++            prev = { x, y };
+ 
+-            ctx.beginPath();
+ 
++        }
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // DIBUJAR UN SEGMENTO DE SURCO (efecto rastrillo: varias púas + relieve)
++    //==========================================================================
++    //
++    // x1,y1 -> x2,y2 en coordenadas de la textura (0..width, 0..height)
++    //
++    //==========================================================================
++
++    drawGrooveSegment(x1, y1, x2, y2, intensity = 1) {
++
++
++        const ctx = this.tctx;
++
++        const dx = x2 - x1;
++        const dy = y2 - y1;
++
++        const len = Math.hypot(dx, dy) || 1;
++
++        const nx = -dy / len;
++        const ny = dx / len;
++
++
++        const tineCount = 5;
++        const spacing = 5;
++
++
++        for (let i = 0; i < tineCount; i++) {
++
++
++            const offset =
++                (i - (tineCount - 1) / 2) * spacing;
+ 
+-            ctx.moveTo(-100, y);
++            const ox = nx * offset;
++            const oy = ny * offset;
+ 
+ 
+-            ctx.bezierCurveTo(
++            // sombra del surco (lado hundido)
+ 
+-                -30,
++            ctx.strokeStyle =
++                `rgba(105,85,55,${0.32 * intensity})`;
+ 
+-                y - 10,
++            ctx.lineWidth = 1.6;
+ 
+-                30,
++            ctx.lineCap = "round";
+ 
+-                y + 10,
++            ctx.beginPath();
++
++            ctx.moveTo(x1 + ox + nx * 1.3, y1 + oy + ny * 1.3);
++
++            ctx.lineTo(x2 + ox + nx * 1.3, y2 + oy + ny * 1.3);
++
++            ctx.stroke();
+ 
+-                100,
+ 
+-                y
++            // brillo del surco (lado elevado)
+ 
+-            );
++            ctx.strokeStyle =
++                `rgba(255,250,232,${0.42 * intensity})`;
+ 
++            ctx.lineWidth = 1.3;
++
++            ctx.beginPath();
++
++            ctx.moveTo(x1 + ox - nx * 1.3, y1 + oy - ny * 1.3);
++
++            ctx.lineTo(x2 + ox - nx * 1.3, y2 + oy - ny * 1.3);
+ 
+             ctx.stroke();
+ 
+@@ -105,8 +236,157 @@ export class SandPatch extends GameObject {
+         }
+ 
+ 
++    }
++
++
++
++
++    //==========================================================================
++    // RASTRILLAR (llamado desde RakeTool con coordenadas del mundo)
++    //==========================================================================
++
++    rakeStroke(fromWorld, toWorld) {
++
++
++        const p1 = this.worldToLocal(fromWorld.x, fromWorld.y);
++        const p2 = this.worldToLocal(toWorld.x, toWorld.y);
++
++
++        const w = this.width;
++        const h = this.height;
++
++
++        this.drawGrooveSegment(
++
++            p1.x + w / 2,
++            p1.y + h / 2,
++
++            p2.x + w / 2,
++            p2.y + h / 2
++
++        );
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // ALISAR (borrar rastros y volver a la arena limpia)
++    //==========================================================================
++
++    smooth() {
++
++
++        this.generateBase();
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // CONVERTIR PUNTO DEL MUNDO A ESPACIO LOCAL DEL OBJETO
++    //==========================================================================
++
++    worldToLocal(wx, wy) {
++
++
++        const cos = Math.cos(-this.rotation);
++        const sin = Math.sin(-this.rotation);
++
++        const dx = wx - this.x;
++        const dy = wy - this.y;
++
++
++        return {
++
++            x: (dx * cos - dy * sin) / this.scale,
++
++            y: (dx * sin + dy * cos) / this.scale
++
++        };
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // ¿EL PUNTO ESTÁ DENTRO DE LA ELIPSE DE ARENA?
++    //==========================================================================
++
++    containsPoint(x, y) {
++
++
++        const local = this.worldToLocal(x, y);
++
++
++        const nx = local.x / this.radiusX;
++        const ny = local.y / this.radiusY;
++
++
++        return (nx * nx + ny * ny) <= 1;
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // DIBUJO
++    //==========================================================================
++
++    drawObject(ctx) {
++
++
++        // recorte elíptico + textura rastrillada
++
++        ctx.save();
++
++        ctx.beginPath();
++
++        ctx.ellipse(0, 0, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
++
++        ctx.clip();
++
++        ctx.drawImage(
++
++            this.texture,
++
++            -this.width / 2,
++            -this.height / 2,
++
++            this.width,
++            this.height
++
++        );
++
++        ctx.restore();
++
++
++        // borde del estanque, como un cajón de madera hundido
++
++        ctx.save();
++
++        ctx.beginPath();
++
++        ctx.ellipse(0, 0, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
++
++        ctx.lineWidth = 6;
++
++        ctx.strokeStyle = "rgba(110,85,55,0.28)";
++
++        ctx.stroke();
++
++        ctx.restore();
++
+ 
+     }
+ 
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/tools/RakeTool.js b/tools/RakeTool.js
+new file mode 100644
+index 0000000..962557b
+--- /dev/null
++++ b/tools/RakeTool.js
+@@ -0,0 +1,217 @@
++// ============================================================================
++// Silence Engine
++// RakeTool.js
++// Garden of Silence
++// Rastrilla la arena mientras el usuario arrastra el mouse sobre un SandPatch
++// ============================================================================
++
++
++export class RakeTool {
++
++
++    constructor(engine) {
++
++
++        this.engine = engine;
++
++        this.name = "rake";
++
++
++        this.activePatch = null;
++
++        this.lastWorld = null;
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // CICLO DE VIDA
++    //==========================================================================
++
++    enter() {
++
++
++        this.engine.canvas.style.cursor = "crosshair";
++
++
++    }
++
++
++
++
++    exit() {
++
++
++        this.activePatch = null;
++
++        this.lastWorld = null;
++
++        this.engine.canvas.style.cursor = "grab";
++
++
++    }
++
++
++
++
++    update() {
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // MOUSE DOWN: ¿hay arena bajo el cursor? empezamos a rastrillar
++    //==========================================================================
++
++    mouseDown() {
++
++
++        const world =
++            this.engine.input.getMouseWorld();
++
++
++        const patch =
++            this.findPatchAt(world.x, world.y);
++
++
++        if (patch) {
++
++
++            this.activePatch = patch;
++
++            this.lastWorld = world;
++
++
++        }
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // MOUSE MOVE: si estamos arrastrando sobre un parche, dibujar el surco
++    //==========================================================================
++
++    mouseMove() {
++
++
++        if (!this.activePatch)
++            return;
++
++
++        if (!this.engine.input.mouse.down)
++            return;
++
++
++        const world =
++            this.engine.input.getMouseWorld();
++
++
++        this.activePatch.rakeStroke(
++
++            this.lastWorld,
++
++            world
++
++        );
++
++
++        this.lastWorld = world;
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // MOUSE UP: soltar el rastrillo
++    //==========================================================================
++
++    mouseUp() {
++
++
++        this.activePatch = null;
++
++        this.lastWorld = null;
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // DOBLE CLIC: alisar la arena bajo el cursor
++    //==========================================================================
++
++    doubleClick() {
++
++
++        const world =
++            this.engine.input.getMouseWorld();
++
++
++        const patch =
++            this.findPatchAt(world.x, world.y);
++
++
++        if (patch) {
++
++            patch.smooth();
++
++        }
++
++
++    }
++
++
++
++
++    //==========================================================================
++    // BUSCAR PARCHE DE ARENA BAJO UN PUNTO DEL MUNDO
++    //==========================================================================
++
++    findPatchAt(x, y) {
++
++
++        const patches =
++            this.engine.world.objects.filter(
++
++                object => object.type === "sand"
++
++            );
++
++
++        // el último agregado queda "encima"
++
++        for (let i = patches.length - 1; i >= 0; i--) {
++
++
++            if (patches[i].containsPoint(x, y)) {
++
++
++                return patches[i];
++
++
++            }
++
++
++        }
++
++
++        return null;
++
++
++    }
++
++
++}
+diff --git a/tools/ToolManager.js b/tools/ToolManager.js
+index a67db8d..26a1577 100644
+--- a/tools/ToolManager.js
++++ b/tools/ToolManager.js
+@@ -159,5 +159,22 @@ export class ToolManager {
+ 
+ 
+ 
++    doubleClick(event) {
++
++
++        if (this.currentTool && this.currentTool.doubleClick) {
++
++
++            this.currentTool.doubleClick(event);
++
++
++        }
++
++
++    }
++
++
++
++
+ 
+ }
+\ No newline at end of file

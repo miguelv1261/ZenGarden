@@ -5,7 +5,7 @@
 // Version 0.2 Alpha
 // ============================================================================
 
-import { Engine } from "./core/Engine.js";
+import { Engine } from "../core/Engine.js";
 
 
 
