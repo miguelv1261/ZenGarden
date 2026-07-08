@@ -118,9 +118,9 @@ export class Renderer {
 
         ctx.translate(
 
-            this.canvas.width / 2,
+            this.canvas.clientWidth / 2,
 
-            this.canvas.height / 2
+            this.canvas.clientHeight / 2
 
         );
 
@@ -190,9 +190,9 @@ export class Renderer {
 
             0,
 
-            this.canvas.width,
+            this.canvas.clientWidth,
 
-            this.canvas.height
+            this.canvas.clientHeight
 
         );
 
@@ -209,9 +209,9 @@ export class Renderer {
 
             0,
 
-            this.canvas.width,
+            this.canvas.clientWidth,
 
-            this.canvas.height
+            this.canvas.clientHeight
 
         );
 

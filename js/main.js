@@ -78,6 +78,54 @@ class GardenOfSilence {
 
 
     //==========================================================================
+    // CONECTAR BOTONES DE HERRAMIENTAS
+    //==========================================================================
+
+    bindTools() {
+
+
+        const buttons =
+            document.querySelectorAll(
+                "#leftPanel button[data-tool]"
+            );
+
+
+        buttons.forEach(button => {
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+
+                    const tool =
+                        button.dataset.tool;
+
+
+                    this.engine.tools.activate(tool);
+
+
+                    buttons.forEach(b =>
+                        b.classList.remove("active")
+                    );
+
+
+                    button.classList.add("active");
+
+
+                }
+            );
+
+
+        });
+
+
+    }
+
+
+
+
+    //==========================================================================
     // ACCESO AL MOTOR
     //==========================================================================
 

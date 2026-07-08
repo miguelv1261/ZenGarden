@@ -186,6 +186,16 @@ body {
 
 }
 
+#leftPanel button.active {
+
+    background: var(--green);
+
+    color: white;
+
+    box-shadow: 0 4px 12px var(--shadow);
+
+}
+
 main {
 
     position: relative;

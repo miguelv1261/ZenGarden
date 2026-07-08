@@ -8,12 +8,14 @@
 export class Input {
 
 
-    constructor(canvas, camera) {
+    constructor(canvas, camera, toolManager = null) {
 
 
         this.canvas = canvas;
 
         this.camera = camera;
+
+        this.toolManager = toolManager;
 
 
 
@@ -87,6 +89,21 @@ export class Input {
 
     }
 
+
+
+
+
+    //==========================================================================
+    // CONEXIÓN CON TOOLMANAGER
+    //==========================================================================
+
+    setToolManager(toolManager){
+
+
+        this.toolManager = toolManager;
+
+
+    }
 
 
 
@@ -270,6 +287,13 @@ export class Input {
             this.mouse.y;
 
 
+        if(this.toolManager){
+
+            this.toolManager.mouseMove(event);
+
+        }
+
+
     }
 
 
@@ -332,6 +356,13 @@ export class Input {
             this.mouse.y;
 
 
+        if(this.toolManager){
+
+            this.toolManager.mouseDown(event);
+
+        }
+
+
     }
 
 
@@ -354,6 +385,13 @@ export class Input {
 
             this.draggingCamera = false;
 
+
+        }
+
+
+        if(this.toolManager){
+
+            this.toolManager.mouseUp(event);
 
         }
 

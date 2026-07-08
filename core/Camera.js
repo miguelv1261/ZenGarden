@@ -215,12 +215,12 @@ export class Camera {
         return {
 
             x:
-                (screenX - this.canvas.width / 2) /
+                (screenX - this.canvas.clientWidth / 2) /
                 this.zoom +
                 this.x,
 
             y:
-                (screenY - this.canvas.height / 2) /
+                (screenY - this.canvas.clientHeight / 2) /
                 this.zoom +
                 this.y
 
@@ -235,12 +235,12 @@ export class Camera {
             x:
                 (worldX - this.x) *
                 this.zoom +
-                this.canvas.width / 2,
+                this.canvas.clientWidth / 2,
 
             y:
                 (worldY - this.y) *
                 this.zoom +
-                this.canvas.height / 2
+                this.canvas.clientHeight / 2
 
         };
 
@@ -254,19 +254,19 @@ export class Camera {
 
         const left =
             this.x -
-            this.canvas.width / 2 / this.zoom;
+            this.canvas.clientWidth / 2 / this.zoom;
 
         const right =
             this.x +
-            this.canvas.width / 2 / this.zoom;
+            this.canvas.clientWidth / 2 / this.zoom;
 
         const top =
             this.y -
-            this.canvas.height / 2 / this.zoom;
+            this.canvas.clientHeight / 2 / this.zoom;
 
         const bottom =
             this.y +
-            this.canvas.height / 2 / this.zoom;
+            this.canvas.clientHeight / 2 / this.zoom;
 
         return !(
             x + width < left ||
@@ -315,19 +315,19 @@ export class Camera {
 
             left:
                 this.x -
-                this.canvas.width / 2 / this.zoom,
+                this.canvas.clientWidth / 2 / this.zoom,
 
             right:
                 this.x +
-                this.canvas.width / 2 / this.zoom,
+                this.canvas.clientWidth / 2 / this.zoom,
 
             top:
                 this.y -
-                this.canvas.height / 2 / this.zoom,
+                this.canvas.clientHeight / 2 / this.zoom,
 
             bottom:
                 this.y +
-                this.canvas.height / 2 / this.zoom
+                this.canvas.clientHeight / 2 / this.zoom
 
         };
 
