@@ -1,67 +1,120 @@
-const canvas = document.getElementById("gameCanvas");
+// ============================================================================
+// Silence Engine
+// main.js
+// Garden of Silence
+// Version 0.2 Alpha
+// ============================================================================
 
-const ctx = canvas.getContext("2d");
+import { Engine } from "./core/Engine.js";
 
-function resize() {
 
-    canvas.width = canvas.clientWidth;
 
-    canvas.height = canvas.clientHeight;
+class GardenOfSilence {
 
-}
 
-window.addEventListener("resize", resize);
+    constructor() {
 
-resize();
 
-function draw() {
+        this.engine = null;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Fondo papel
-
-    ctx.fillStyle = "#efe8da";
-
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Cuadrícula suave
-
-    ctx.strokeStyle = "rgba(0,0,0,.04)";
-
-    for (let x = 0; x < canvas.width; x += 100) {
-
-        ctx.beginPath();
-
-        ctx.moveTo(x, 0);
-
-        ctx.lineTo(x, canvas.height);
-
-        ctx.stroke();
 
     }
 
-    for (let y = 0; y < canvas.height; y += 100) {
 
-        ctx.beginPath();
 
-        ctx.moveTo(0, y);
 
-        ctx.lineTo(canvas.width, y);
 
-        ctx.stroke();
+    //==========================================================================
+    // INICIAR APLICACIÓN
+    //==========================================================================
+
+    start() {
+
+
+        const canvas =
+            document.getElementById(
+                "gameCanvas"
+            );
+
+
+
+        if (!canvas) {
+
+
+            console.error(
+                "Canvas gameCanvas no encontrado"
+            );
+
+
+            return;
+
+
+        }
+
+
+
+
+
+        this.engine =
+            new Engine(canvas);
+
+
+
+        this.engine.start();
+
+
+
+        console.log(
+
+            "🌿 Garden of Silence iniciado"
+
+        );
+
 
     }
 
-    // Texto
 
-    ctx.fillStyle = "#82654b";
 
-    ctx.font = "28px Segoe UI";
 
-    ctx.fillText("Garden of Silence", 40, 60);
 
-    requestAnimationFrame(draw);
+    //==========================================================================
+    // ACCESO AL MOTOR
+    //==========================================================================
+
+    getEngine() {
+
+
+        return this.engine;
+
+
+    }
+
 
 }
 
-draw();
+
+
+
+
+// ============================================================================
+// BOOT
+// ============================================================================
+
+window.addEventListener(
+
+    "DOMContentLoaded",
+
+    () => {
+
+
+        window.Garden =
+            new GardenOfSilence();
+
+
+
+        window.Garden.start();
+
+
+    }
+
+);

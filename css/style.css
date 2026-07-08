@@ -192,6 +192,10 @@ main {
 
     overflow: hidden;
 
+    width: 100%;
+
+    height: 100%;
+
     background:
 
         repeating-linear-gradient(45deg,
@@ -208,11 +212,13 @@ main {
 
 #gameCanvas {
 
+    display: block;
+
     width: 100%;
 
     height: 100%;
 
-    display: block;
+    background: #efe8da;
 
     cursor: grab;
 
